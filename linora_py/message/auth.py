@@ -13,6 +13,7 @@ def build_auth_message(chain_id: int, timestamp: int, expiry: int) -> TypedDataD
             "body": "",
             "timestamp": timestamp,
             "expiration": expiry,
+            
         },
         "domain": {"name": "linora", "chainId": hex(chain_id), "version": "1"},
         "primaryType": "Request",
