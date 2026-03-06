@@ -51,6 +51,7 @@ def validate_ws_message(message_data: dict[str, Any]) -> BaseModel | None:
         Validated message model or None if validation fails
     """
     try:
+        
         # Try as JSON-RPC request
         if "method" in message_data:
             return JSONRPCRequest.model_validate(message_data)
