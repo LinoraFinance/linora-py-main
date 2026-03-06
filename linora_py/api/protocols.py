@@ -12,6 +12,7 @@ from typing import Any, Protocol
 import httpx
 
 
+
 # WebSocket protocols
 class WebSocketConnection(Protocol):
     """Protocol for WebSocket connection implementations."""
