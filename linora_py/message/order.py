@@ -31,6 +31,7 @@ def build_order_message(chain_id: int, o: Order) -> TypedDataDict:
             ],
         },
         "message": {
+            
             "timestamp": str(o.signature_timestamp),
             "market": o.market,  # As encoded short string
             "side": o.order_side.chain_side(),  # 1: BUY, 2: SELL
