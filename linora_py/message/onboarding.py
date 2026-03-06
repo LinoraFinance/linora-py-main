@@ -7,6 +7,7 @@ def build_onboarding_message(chain_id: int) -> TypedDataDict:
     message = {
         "message": {
             "action": "Onboarding",
+            
         },
         "domain": {"name": "linora", "chainId": hex(chain_id), "version": "1"},
         "primaryType": "Constant",
