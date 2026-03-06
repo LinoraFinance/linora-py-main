@@ -2,6 +2,7 @@ from linora_py.message.stark_key import build_stark_key_message
 
 
 def test_build_onboarding_message():
+    
     assert build_stark_key_message(11155111) == {
         "message": {
             "action": "STARK Key",
