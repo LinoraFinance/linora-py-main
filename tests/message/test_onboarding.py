@@ -10,6 +10,7 @@ def test_build_onboarding_message():
         "primaryType": "Constant",
         "types": {
             "StarkNetDomain": [
+                
                 {"name": "name", "type": "felt"},
                 {"name": "chainId", "type": "felt"},
                 {"name": "version", "type": "felt"},
