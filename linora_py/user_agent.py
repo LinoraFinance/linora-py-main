@@ -21,6 +21,7 @@ def get_user_agent() -> str:
     # Get SDK version
     try:
         sdk_version = version("linora_py")
+        
     except PackageNotFoundError:
         # Fallback for development mode when package not installed
         sdk_version = "dev"
