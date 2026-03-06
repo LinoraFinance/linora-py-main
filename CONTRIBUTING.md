@@ -57,6 +57,7 @@ git clone git@github.com:YOUR_NAME/linora-py.git
 ```
 
 3. Now we need to install the environment. Navigate into the directory
+4. 
 
 ```bash
 cd linora-py
