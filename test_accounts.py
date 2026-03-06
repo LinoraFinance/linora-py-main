@@ -6,6 +6,7 @@ TEST_ACCOUNTS = [
         "name": "account_1",
         "l1_private_key": "0xba987cd45a4b93159f701b2e97bfd79e5cb93fa65030446aaf53831b32f8640d",
         "l1_address": "0xD0B64b8562331595bDf948bc60Fb92a2E5C009A6",
+        
     },
     {
         "name": "account_2",
