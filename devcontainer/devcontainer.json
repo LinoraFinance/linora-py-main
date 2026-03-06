@@ -7,7 +7,6 @@
     "features": {
         "ghcr.io/devcontainers-contrib/features/poetry:2": {}
     },
-
     // Use 'postCreateCommand' to run commands after the container is created.
     "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
 
