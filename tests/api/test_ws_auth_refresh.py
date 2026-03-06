@@ -33,6 +33,7 @@ def create_jwt_token(exp_timestamp: float) -> str:
     # Create payload with expiration
     payload = {"exp": int(exp_timestamp), "sub": "test_user"}
     payload_encoded = base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip("=")
+    
 
     # Create dummy signature (not validated in our code)
     signature = "dummy_signature"
