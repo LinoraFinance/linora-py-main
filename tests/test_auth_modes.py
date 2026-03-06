@@ -35,6 +35,7 @@ class TestAuthLevel:
         assert AuthLevel.UNAUTHENTICATED < AuthLevel.AUTHENTICATED
         assert AuthLevel.AUTHENTICATED < AuthLevel.TRADING
         assert AuthLevel.TRADING < AuthLevel.FULL
+        
 
     def test_gte_comparisons(self):
         assert AuthLevel.FULL >= AuthLevel.TRADING
