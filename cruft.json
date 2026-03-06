@@ -19,6 +19,7 @@
             "devcontainer": "y",
             "open_source_license": "MIT license",
             "_template": "https://github.com/fpgmaas/cookiecutter-poetry"
+            
         }
     },
     "directory": null
