@@ -11,6 +11,7 @@ from linora_py.utils import raise_value_error
 __all__ = ["linoraApiKey"]
 
 
+
 class linoraApiKey(_ClientBase):
     """API key authentication: use a pre-generated long-lived token string.
 
