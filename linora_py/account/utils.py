@@ -52,6 +52,7 @@ def _sign_stark_key_message(stark_key_message, l1_private_key: int) -> str:
     # Ensure 0x prefix for compatibility with _get_private_key_from_eth_signature
     # which expects [2:66] to skip "0x" and extract the r value
     return sig_hex if sig_hex.startswith("0x") else "0x" + sig_hex
+    
 
 
 def _sign_stark_key_message_ledger(message: SignableMessage, eth_account_address: str) -> str:
