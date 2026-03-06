@@ -19,6 +19,7 @@ class TestlinoraAccountRpcVersion:
         """Test that account uses default RPC URL when rpc_version is not provided."""
         api_client = MockApiClient()
         config = api_client.fetch_system_config()
+        
 
         with patch("linora_py.account.account.FullNodeClient") as mock_client:
             mock_client_instance = MagicMock()
