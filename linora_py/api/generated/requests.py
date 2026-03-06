@@ -31,6 +31,7 @@ class CancelOrderBatchRequest(BaseModel):
         extra="allow",
         populate_by_name=True,
     )
+    
     client_order_ids: Annotated[
         list[str] | None,
         Field(description="List of client order IDs to cancel", examples=[['["client-id-1"', '"client-id-2"]']]),
