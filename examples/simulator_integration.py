@@ -58,6 +58,7 @@ class MockConnection:
         msg = self.messages[self.index]
         self.index += 1
         return msg
+        
 
     async def close(self):
         self.state = SimpleNamespace(value="CLOSED")
