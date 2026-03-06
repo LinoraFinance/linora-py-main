@@ -1,7 +1,6 @@
 from linora_py import linora
 from linora_py.environment import TESTNET
 
-
 def test_system_config():
     linora = linora(env=TESTNET)
     assert linora.config.starknet_gateway_url == ""
