@@ -31,6 +31,7 @@ def test_build_auth_message():
     }
 
 
+
 def test_build_fullnode_message():
     chain_id = 42
     account = "0x1"
