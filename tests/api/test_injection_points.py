@@ -30,6 +30,7 @@ class TestHttpClientInjection:
         # Create a custom httpx client
         custom_client = httpx.Client()
         custom_client.headers.update({"Custom-Header": "test-value"})
+        
 
         # Inject it into HttpClient
         client = HttpClient(http_client=custom_client)
