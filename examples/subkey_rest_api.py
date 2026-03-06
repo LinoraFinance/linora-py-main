@@ -24,6 +24,7 @@ from linora_py import linora, linoraSubkey
 from linora_py.common.order import Order, OrderSide, OrderType
 from linora_py.environment import TESTNET
 
+
 # Environment variables
 TEST_L2_ADDRESS = os.getenv("L2_ADDRESS", "")
 TEST_L2_PRIVATE_KEY = os.getenv("L2_PRIVATE_KEY", "")
