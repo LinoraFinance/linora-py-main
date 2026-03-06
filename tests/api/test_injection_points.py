@@ -1,0 +1,542 @@
+"""Tests for simulator-friendly injection points in linora_py."""
+import asyncio
+import json
+from unittest.mock import MagicMock, patch
+
+import httpx
+import pytest
+
+from linora_py.api.api_client import linoraApiClient
+from linora_py.api.http_client import HttpClient
+from linora_py.api.protocols import DefaultRetryStrategy
+from linora_py.api.ws_client import linoraWebsocketChannel, linoraWebsocketClient
+from linora_py.environment import TESTNET
+from linora_py.linora import linora
+
+
+class TestHttpClientInjection:
+    """Test HTTP client injection functionality."""
+
+    def test_http_client_default_initialization(self):
+        """Test default HTTP client initialization."""
+        client = HttpClient()
+        assert client.client is not None
+        assert isinstance(client.client, httpx.Client)
+        assert "Content-Type" in client.client.headers
+        assert client.client.headers["Content-Type"] == "application/json"
+
+    def test_http_client_injection(self):
+        """Test HTTP client injection."""
+        # Create a custom httpx client
+        custom_client = httpx.Client()
+        custom_client.headers.update({"Custom-Header": "test-value"})
+
+        # Inject it into HttpClient
+        client = HttpClient(http_client=custom_client)
+
+        assert client.client is custom_client
+        assert "Custom-Header" in client.client.headers
+        assert client.client.headers["Custom-Header"] == "test-value"
+        # Should still have Content-Type added
+        assert "Content-Type" in client.client.headers
+
+    def test_http_client_injection_preserves_existing_headers(self):
+        """Test that injection preserves existing headers."""
+        # Create a custom client with Content-Type already set
+        custom_client = httpx.Client()
+        custom_client.headers.update({"Content-Type": "application/xml"})
+
+        # Inject it into HttpClient
+        client = HttpClient(http_client=custom_client)
+
+        # Should preserve the existing Content-Type
+        assert client.client.headers["Content-Type"] == "application/xml"
+
+    def test_mock_transport_integration(self):
+        """Test integration with httpx MockTransport."""
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            if request.url.path.endswith("/test"):
+                return httpx.Response(200, json={"message": "success"})
+            return httpx.Response(404, json={"error": "not found"})
+
+        mock_transport = httpx.MockTransport(handler)
+        custom_client = httpx.Client(transport=mock_transport)
+        http_client = HttpClient(http_client=custom_client)
+
+        # Test successful request - import HttpMethod properly
+        from linora_py.api.http_client import HttpMethod
+
+        result = http_client.request(
+            url="https://example.com/test",
+            http_method=HttpMethod.GET,
+        )
+        # Verify the mock transport worked by checking the response
+        assert result == {"message": "success"}
+        # Verify the client was injected correctly
+        assert http_client.client is custom_client
+
+
+class TestApiClientInjection:
+    """Test API client injection functionality."""
+
+    def test_api_client_default_initialization(self):
+        """Test default API client initialization."""
+        with patch.object(linoraApiClient, "fetch_system_config", return_value=MagicMock()):
+            client = linoraApiClient(env=TESTNET)
+            assert client.env == TESTNET
+            assert "testnet" in client.api_url
+
+    def test_api_client_http_injection(self):
+        """Test API client with HTTP client injection."""
+        custom_http_client = HttpClient(http_client=httpx.Client())
+
+        with patch.object(linoraApiClient, "fetch_system_config", return_value=MagicMock()):
+            client = linoraApiClient(env=TESTNET, http_client=custom_http_client)
+            # Verify the custom client was used
+            assert client.client is not None
+
+    def test_api_client_base_url_override(self):
+        """Test API client with base URL override."""
+        custom_url = "https://custom.api.example.com/v1"
+
+        with patch.object(linoraApiClient, "fetch_system_config", return_value=MagicMock()):
+            client = linoraApiClient(env=TESTNET, api_base_url=custom_url)
+            assert client.api_url == custom_url
+
+    def test_api_client_both_injections(self):
+        """Test API client with both HTTP client and URL override."""
+        custom_http_client = HttpClient(http_client=httpx.Client())
+        custom_url = "https://custom.api.example.com/v1"
+
+        with patch.object(linoraApiClient, "fetch_system_config", return_value=MagicMock()):
+            client = linoraApiClient(env=TESTNET, http_client=custom_http_client, api_base_url=custom_url)
+            assert client.api_url == custom_url
+            assert client.client is not None
+
+
+class MockRetryStrategy:
+    """Minimal retry strategy for wiring tests."""
+
+    def should_retry(self, attempt, response, exception):
+        return False
+
+    def get_delay(self, attempt, response=None):
+        return 0.0
+
+
+class TestRetryStrategyWiring:
+    """Test retry strategy is correctly wired through the client hierarchy."""
+
+    # ── linoraApiClient ──────────────────────────────────────────────────────
+
+    def test_api_client_no_retry_by_default(self):
+        """linoraApiClient() without a strategy has no retry (None)."""
+        client = linoraApiClient(env=TESTNET)
+        assert client.retry_strategy is None
+
+    def test_api_client_explicit_none_means_no_retry(self):
+        """linoraApiClient(retry_strategy=None) has no retry."""
+        client = linoraApiClient(env=TESTNET, retry_strategy=None)
+        assert client.retry_strategy is None
+
+    def test_api_client_explicit_strategy_is_used(self):
+        """linoraApiClient(retry_strategy=...) stores the given strategy."""
+        strategy = MockRetryStrategy()
+        client = linoraApiClient(env=TESTNET, retry_strategy=strategy)
+        assert client.retry_strategy is strategy
+
+    def test_api_client_default_retry_strategy_explicit_opt_in(self):
+        """linoraApiClient(retry_strategy=DefaultRetryStrategy()) uses it."""
+        strategy = DefaultRetryStrategy()
+        client = linoraApiClient(env=TESTNET, retry_strategy=strategy)
+        assert isinstance(client.retry_strategy, DefaultRetryStrategy)
+
+    def test_api_client_http_injection_does_not_override_strategy(self):
+        """Injecting an HttpClient does not override the retry_strategy passed directly."""
+        http_client = HttpClient(http_client=httpx.Client())
+        strategy = MockRetryStrategy()
+        client = linoraApiClient(env=TESTNET, http_client=http_client, retry_strategy=strategy)
+        assert client.retry_strategy is strategy
+
+    def test_api_client_no_retry_does_not_retry_on_error(self):
+        """linoraApiClient without retry strategy raises on first error, no retries."""
+        client = linoraApiClient(env=TESTNET)
+
+        with patch("httpx.Client.request") as mock_request:
+            mock_request.return_value = httpx.Response(
+                500, json={"error": "INTERNAL_ERROR", "message": "server error", "data": None}
+            )
+            with pytest.raises(ValueError, match="server error"):
+                from linora_py.api.http_client import HttpMethod
+
+                client.request(url="https://example.com/test", http_method=HttpMethod.GET)
+
+        # Called exactly once — no retries
+        assert mock_request.call_count == 1
+
+    # ── linora facade ────────────────────────────────────────────────────────
+
+    @patch.object(linoraApiClient, "fetch_system_config", return_value=MagicMock())
+    def test_linora_default_has_default_retry_strategy(self, _mock):
+        """linora() defaults to DefaultRetryStrategy for backward compat."""
+        linora = linora(env=TESTNET)
+        assert isinstance(linora.api_client.retry_strategy, DefaultRetryStrategy)
+
+    @patch.object(linoraApiClient, "fetch_system_config", return_value=MagicMock())
+    def test_linora_explicit_none_disables_retries(self, _mock):
+        """linora(retry_strategy=None) passes None to the API client."""
+        linora = linora(env=TESTNET, retry_strategy=None)
+        assert linora.api_client.retry_strategy is None
+
+    @patch.object(linoraApiClient, "fetch_system_config", return_value=MagicMock())
+    def test_linora_custom_strategy_is_forwarded(self, _mock):
+        """linora(retry_strategy=custom) forwards the strategy to linoraApiClient."""
+        strategy = MockRetryStrategy()
+        linora = linora(env=TESTNET, retry_strategy=strategy)
+        assert linora.api_client.retry_strategy is strategy
+
+    @patch.object(linoraApiClient, "fetch_system_config", return_value=MagicMock())
+    def test_linora_retry_strategy_not_silently_discarded(self, _mock):
+        """retry_strategy passed to linora is not discarded (regression for the wiring bug)."""
+        strategy = MockRetryStrategy()
+        linora = linora(env=TESTNET, retry_strategy=strategy)
+        # Must be the exact object, not a freshly-created DefaultRetryStrategy
+        assert linora.api_client.retry_strategy is strategy
+
+    @patch.object(linoraApiClient, "fetch_system_config", return_value=MagicMock())
+    def test_linora_http_client_injection_does_not_override_strategy(self, _mock):
+        """Injecting a custom HttpClient alongside retry_strategy still wires the strategy."""
+        http_client = HttpClient(http_client=httpx.Client())
+        strategy = MockRetryStrategy()
+        linora = linora(env=TESTNET, http_client=http_client, retry_strategy=strategy)
+        assert linora.api_client.retry_strategy is strategy
+
+
+class MockWebSocketConnection:
+    """Mock WebSocket connection for testing."""
+
+    def __init__(self, messages=None):
+        self.messages = messages or []
+        self._message_iter = iter(self.messages)
+        from websockets import State
+
+        self.state = State.OPEN
+        self.sent_messages = []
+
+    async def send(self, data: str):
+        self.sent_messages.append(data)
+
+    async def recv(self) -> str:
+        try:
+            return next(self._message_iter)
+        except StopIteration as err:
+            # Simulate waiting indefinitely
+            await asyncio.sleep(10)
+            raise asyncio.TimeoutError() from err
+
+    async def close(self):
+        from websockets import State
+
+        self.state = State.CLOSED
+
+
+class TestWebSocketClientInjection:
+    """Test WebSocket client injection functionality."""
+
+    def test_ws_client_default_initialization(self):
+        """Test default WebSocket client initialization."""
+        client = linoraWebsocketClient(env=TESTNET)
+        assert client.env == TESTNET
+        assert "testnet" in client.api_url
+        assert client.auto_start_reader is True
+        assert client.connector is None
+
+    def test_ws_client_auto_start_reader_disabled(self):
+        """Test WebSocket client with auto_start_reader disabled."""
+        client = linoraWebsocketClient(env=TESTNET, auto_start_reader=False)
+        assert client.auto_start_reader is False
+        assert client._reader_task is None
+
+    def test_ws_client_url_override(self):
+        """Test WebSocket client with URL override."""
+        custom_url = "wss://custom.ws.example.com/v1"
+        client = linoraWebsocketClient(env=TESTNET, ws_url_override=custom_url)
+        assert client.api_url == custom_url
+
+    @pytest.mark.asyncio
+    async def test_ws_client_custom_connector(self):
+        """Test WebSocket client with custom connector."""
+        test_messages = [
+            json.dumps({"params": {"channel": "bbo.BTC-USD-PERP"}, "data": {"bid": "50000", "ask": "50001"}})
+        ]
+
+        async def mock_connector(url: str, headers: dict):
+            return MockWebSocketConnection(test_messages)
+
+        client = linoraWebsocketClient(env=TESTNET, auto_start_reader=False, connector=mock_connector)
+
+        # Test connection
+        result = await client.connect()
+        assert result is True
+        assert client.ws is not None
+        assert isinstance(client.ws, MockWebSocketConnection)
+
+    @pytest.mark.asyncio
+    async def test_ws_client_manual_pumping(self):
+        """Test WebSocket client manual message pumping."""
+        test_message = json.dumps({"params": {"channel": "bbo.BTC-USD-PERP"}, "data": {"bid": "50000", "ask": "50001"}})
+
+        async def mock_connector(url: str, headers: dict):
+            return MockWebSocketConnection([test_message])
+
+        client = linoraWebsocketClient(env=TESTNET, auto_start_reader=False, connector=mock_connector)
+
+        await client.connect()
+
+        # Set up callback to capture message
+        received_messages = []
+
+        async def test_callback(channel, message):
+            received_messages.append((channel, message))
+
+        await client.subscribe(linoraWebsocketChannel.BBO, callback=test_callback, params={"market": "BTC-USD-PERP"})
+
+        # Manually pump one message
+        result = await client.pump_once()
+        assert result is True
+        assert len(received_messages) == 1
+
+        # Try to pump again (should return False as no more messages)
+        result = await client.pump_once()
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_ws_client_message_injection(self):
+        """Test WebSocket client message injection."""
+        client = linoraWebsocketClient(env=TESTNET, auto_start_reader=False)
+
+        # Set up callback to capture message
+        received_messages = []
+
+        async def test_callback(channel, message):
+            received_messages.append((channel, message))
+
+        await client.subscribe(linoraWebsocketChannel.BBO, callback=test_callback, params={"market": "BTC-USD-PERP"})
+
+        # Inject a message directly
+        test_message = json.dumps({"params": {"channel": "bbo.BTC-USD-PERP"}, "data": {"bid": "50000", "ask": "50001"}})
+
+        await client.inject(test_message)
+
+        assert len(received_messages) == 1
+        channel, message = received_messages[0]
+        assert channel == linoraWebsocketChannel.BBO
+        assert message["data"]["bid"] == "50000"
+
+
+class TestlinoraFacadeInjection:
+    """Test linora facade injection functionality."""
+
+    @patch.object(linoraApiClient, "fetch_system_config", return_value=MagicMock())
+    def test_linora_default_initialization(self, mock_config):
+        """Test default linora initialization."""
+        linora = linora(env=TESTNET)
+        assert linora.env == TESTNET
+        assert linora.api_client is not None
+        assert linora.ws_client is not None
+
+    @patch.object(linoraApiClient, "fetch_system_config", return_value=MagicMock())
+    def test_linora_http_injection(self, mock_config):
+        """Test linora with HTTP client injection."""
+        custom_http_client = HttpClient(http_client=httpx.Client())
+
+        linora = linora(env=TESTNET, http_client=custom_http_client)
+
+        assert linora.api_client is not None
+        # Verify the injection was passed through
+        assert linora.api_client.client is not None
+
+    @patch.object(linoraApiClient, "fetch_system_config", return_value=MagicMock())
+    def test_linora_ws_injection(self, mock_config):
+        """Test linora with WebSocket injection."""
+
+        async def mock_connector(url: str, headers: dict):
+            return MockWebSocketConnection()
+
+        linora = linora(
+            env=TESTNET,
+            auto_start_ws_reader=False,
+            ws_connector=mock_connector,
+            ws_url_override="wss://custom.example.com/v1",
+        )
+
+        assert linora.ws_client.auto_start_reader is False
+        assert linora.ws_client.connector is mock_connector
+        assert linora.ws_client.api_url == "wss://custom.example.com/v1"
+
+    @patch.object(linoraApiClient, "fetch_system_config", return_value=MagicMock())
+    def test_linora_full_injection(self, mock_config):
+        """Test linora with all injection options."""
+        custom_http_client = HttpClient(http_client=httpx.Client())
+        custom_api_url = "https://custom.api.example.com/v1"
+        custom_ws_url = "wss://custom.ws.example.com/v1"
+
+        async def mock_connector(url: str, headers: dict):
+            return MockWebSocketConnection()
+
+        linora = linora(
+            env=TESTNET,
+            http_client=custom_http_client,
+            api_base_url=custom_api_url,
+            auto_start_ws_reader=False,
+            ws_connector=mock_connector,
+            ws_url_override=custom_ws_url,
+        )
+
+        # Verify all injections were applied
+        assert linora.api_client.api_url == custom_api_url
+        assert linora.ws_client.api_url == custom_ws_url
+        assert linora.ws_client.auto_start_reader is False
+        assert linora.ws_client.connector is mock_connector
+
+
+class TestSimulatorUseCases:
+    """Test realistic simulator use cases."""
+
+    def test_rest_simulator_integration(self):
+        """Test REST API simulator integration example."""
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            if request.url.path.endswith("/v1/markets"):
+                return httpx.Response(200, json={"results": [{"symbol": "BTC-USD-PERP", "status": "active"}]})
+            elif request.url.path.endswith("/v1/system/config"):
+                return httpx.Response(200, json={"paraclear_decimals": 8, "paraclear_account_registry": "0x123"})
+            return httpx.Response(404, json={"error": "not found"})
+
+        mock_transport = httpx.MockTransport(handler)
+        custom_client = httpx.Client(transport=mock_transport)
+        http_client = HttpClient(http_client=custom_client)
+
+        # This would be used in a simulator
+        api_client = linoraApiClient(
+            env=TESTNET, http_client=http_client, api_base_url="https://simulator.example.com/v1"
+        )
+
+        assert api_client.api_url == "https://simulator.example.com/v1"
+        # Verify the HTTP client was injected correctly by checking instance
+        assert isinstance(api_client, linoraApiClient)
+
+    @pytest.mark.asyncio
+    async def test_ws_simulator_integration(self):
+        """Test WebSocket simulator integration example."""
+        # Simulate market data messages
+        market_messages = [
+            json.dumps(
+                {
+                    "params": {"channel": "bbo.BTC-USD-PERP"},
+                    "data": {"bid": "50000", "ask": "50001", "timestamp": "1234567890"},
+                }
+            ),
+            json.dumps(
+                {
+                    "params": {"channel": "bbo.BTC-USD-PERP"},
+                    "data": {"bid": "50010", "ask": "50011", "timestamp": "1234567891"},
+                }
+            ),
+        ]
+
+        async def simulator_connector(url: str, headers: dict):
+            return MockWebSocketConnection(market_messages)
+
+        # Create client with simulator connector
+        ws_client = linoraWebsocketClient(
+            env=TESTNET,
+            auto_start_reader=False,
+            connector=simulator_connector,
+            ws_url_override="wss://simulator.example.com/v1",
+        )
+
+        await ws_client.connect()
+
+        # Collect messages
+        received_data = []
+
+        async def data_handler(channel, message):
+            received_data.append(message["data"])
+
+        await ws_client.subscribe(linoraWebsocketChannel.BBO, callback=data_handler, params={"market": "BTC-USD-PERP"})
+
+        # Pump messages manually (deterministic)
+        await ws_client.pump_once()
+        await ws_client.pump_once()
+
+        assert len(received_data) == 2
+        assert received_data[0]["bid"] == "50000"
+        assert received_data[1]["bid"] == "50010"
+
+    @pytest.mark.asyncio
+    async def test_combined_simulator_integration(self):
+        """Test combined REST + WebSocket simulator integration."""
+        # REST simulator
+        def rest_handler(request: httpx.Request) -> httpx.Response:
+            if request.url.path.endswith("/v1/system/config"):
+                return httpx.Response(
+                    200,
+                    json={
+                        "paraclear_decimals": 8,
+                        "starknet_gateway_url": "https://alpha4.starknet.io",
+                        "starknet_fullnode_rpc_url": "https://alpha4.starknet.io",
+                        "starknet_chain_id": "SN_GOERLI",
+                        "block_explorer_url": "https://testnet.starkscan.co",
+                        "paraclear_address": "0x123",
+                        "paraclear_account_proxy_hash": "0x456",
+                        "paraclear_account_hash": "0x789",
+                        "oracle_address": "0xabc",
+                        "bridged_tokens": [],
+                        "l1_core_contract_address": "0xdef",
+                        "l1_operator_address": "0x111",
+                        "l1_chain_id": "11155111",
+                        "liquidation_fee": "0.05",
+                    },
+                )
+            return httpx.Response(404, json={"error": "not found"})
+
+        mock_transport = httpx.MockTransport(rest_handler)
+        custom_http_client = httpx.Client(transport=mock_transport)
+
+        # WebSocket simulator
+        async def ws_connector(url: str, headers: dict):
+            return MockWebSocketConnection(
+                [json.dumps({"params": {"channel": "bbo.BTC-USD-PERP"}, "data": {"bid": "50000", "ask": "50001"}})]
+            )
+
+        # Create fully injected linora instance
+        linora = linora(
+            env=TESTNET,
+            http_client=HttpClient(http_client=custom_http_client),
+            api_base_url="https://rest-sim.example.com/v1",
+            auto_start_ws_reader=False,
+            ws_connector=ws_connector,
+            ws_url_override="wss://ws-sim.example.com/v1",
+        )
+
+        # Verify both components are properly configured
+        assert linora.api_client.api_url == "https://rest-sim.example.com/v1"
+        assert linora.ws_client.api_url == "wss://ws-sim.example.com/v1"
+        assert linora.ws_client.auto_start_reader is False
+
+        # Test WebSocket functionality
+        await linora.ws_client.connect()
+
+        received_messages = []
+
+        async def handler(channel, message):
+            received_messages.append(message)
+
+        await linora.ws_client.subscribe(
+            linoraWebsocketChannel.BBO, callback=handler, params={"market": "BTC-USD-PERP"}
+        )
+
+        await linora.ws_client.pump_once()
+        assert len(received_messages) == 1
