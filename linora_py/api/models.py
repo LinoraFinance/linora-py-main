@@ -53,6 +53,7 @@ class AccountSummary:
     updated_at: int
     status: str
     seq_no: int
+    
 
 
 @dataclass
