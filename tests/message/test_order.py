@@ -13,6 +13,7 @@ def test_build_onboarding_message():
         limit_price=Decimal(1500),
         client_id="",
         signature_timestamp=1634736000000,
+        
     )
     assert build_order_message(1, order) == {
         "domain": {"name": "linora", "chainId": "0x1", "version": "1"},
