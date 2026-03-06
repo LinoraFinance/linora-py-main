@@ -6,7 +6,6 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 class TransferFeeConfigResponse(BaseModel):
     model_config = ConfigDict(
         extra="allow",
