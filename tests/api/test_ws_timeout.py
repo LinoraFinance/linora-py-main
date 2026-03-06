@@ -46,6 +46,7 @@ class TestWebSocketTimeout:
         custom_timeout = 3
         linora = linora(env=TESTNET, ws_timeout=custom_timeout)
         assert linora.ws_client.ws_timeout == custom_timeout
+        
 
     def test_linora_class_timeout_none_uses_default(self):
         """Test that passing None for timeout uses the default."""
