@@ -34,7 +34,6 @@ def _jwt_exp(token: str) -> float | None:
         exp = payload.get("exp")
         return float(exp) if exp is not None else None
 
-
 class linoraApiClient(BlockTradesMixin, HttpClient):
     """Class to interact with linora REST API.
         Initialized along with `linora` class.
