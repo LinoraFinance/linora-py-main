@@ -50,6 +50,7 @@ class TestHttpCompression:
         """Test that compression is left as default with custom client when enabled."""
         custom_client = httpx.Client()
         http_client = HttpClient(http_client=custom_client, enable_compression=True)
+        
 
         # Should not modify Accept-Encoding header when compression is enabled
         assert (
