@@ -57,6 +57,7 @@ class TestHttpClientEnhancements:
         """Test default timeout configuration."""
         client = HttpClient(default_timeout=30.0)
         assert client.default_timeout == 30.0
+        
 
         # Test with no default timeout
         client_no_timeout = HttpClient()
