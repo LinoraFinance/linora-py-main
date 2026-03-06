@@ -53,6 +53,7 @@ async def main():
         print("Please set your L2 private key: export L2_PRIVATE_KEY='0x...'")
         return
 
+    
     if not l2_address:
         print("Error: L2_ADDRESS environment variable not set")
         print("Please set the L2 address of the main account: export L2_ADDRESS='0x...'")
