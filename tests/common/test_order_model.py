@@ -13,6 +13,7 @@ def test_order_type_values():
     assert OrderType.TakeProfitMarket.value == "TAKE_PROFIT_MARKET"
     assert OrderType.StopLossMarket.value == "STOP_LOSS_MARKET"
     assert OrderType.StopLossLimit.value == "STOP_LOSS_LIMIT"
+    
 
 
 def test_is_limit_type():
