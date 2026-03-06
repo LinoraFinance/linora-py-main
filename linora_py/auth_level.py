@@ -25,6 +25,7 @@ class AuthLevel(IntEnum):
     Can read private account data (positions, fills, balances).
     Cannot sign or submit orders.
     Typical for ``linoraApiKey``."""
+    
 
     TRADING = 2
     """Registered subkey — can sign and submit orders only.
