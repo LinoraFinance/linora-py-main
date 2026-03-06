@@ -50,6 +50,7 @@ def test_account_l2_private_key():
 def test_account_onboarding_signature():
     api_client = MockApiClient()
     config = api_client.fetch_system_config()
+    
 
     account = linoraAccount(
         config=config,
