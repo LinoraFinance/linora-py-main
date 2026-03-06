@@ -14,7 +14,6 @@ from linora_py.api.generated.responses import (
     PaginatedAPIResults,
 )
 
-
 class ApiClientProtocol(Protocol):
     """Protocol defining the interface expected by BlockTradesMixin."""
 
