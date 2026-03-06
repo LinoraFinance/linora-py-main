@@ -64,6 +64,7 @@ class linoraL2(_ClientBase):
             linoraWebsocketClient(env=env, logger=logger, ws_timeout=ws_timeout, api_client=self.api_client)
             if ws_enabled
             else None
+            
         )
         self.config = self.api_client.fetch_system_config()
 
