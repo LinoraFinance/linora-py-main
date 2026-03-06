@@ -47,6 +47,7 @@ class TestlinoraApiClient:
             )
 
     def test_cancel_orders_batch_with_both_ids(self):
+        
         """Test cancel_orders_batch with both order IDs and client order IDs."""
         order_ids = ["order1"]
         client_order_ids = ["client1"]
