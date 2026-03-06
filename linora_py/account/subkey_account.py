@@ -52,6 +52,7 @@ class SubkeyAccount(linoraAccount):
         # Set L2 credentials
         self.l2_private_key = int_from_hex(l2_private_key)
         self.l2_address = int_from_hex(l2_address)
+        
 
         # Generate public key from private key
         key_pair = KeyPair.from_private_key(self.l2_private_key)
