@@ -59,6 +59,7 @@ class Order:
         reduce_only: bool = False,
         recv_window: int | None = None,
         stp: (
+            
             str | None
         ) = None,  # Self Trade Prevention, EXPIRE_MAKER, EXPIRE_TAKER or EXPIRE_BOTH, default: EXPIRE_TAKER
         trigger_price: Decimal | None = None,
