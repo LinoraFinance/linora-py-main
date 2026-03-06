@@ -6,6 +6,7 @@ __all__ = ["Environment", "PROD", "TESTNET", "NIGHTLY"]
 
 Environment = Literal["prod", "testnet", "nightly"]
 
+
 PROD: Environment = "prod"
 TESTNET: Environment = "testnet"
 NIGHTLY: Environment = "nightly"
