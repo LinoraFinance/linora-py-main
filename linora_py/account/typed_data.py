@@ -33,6 +33,7 @@ class TypedData(StarknetTypedDataDataclass):
             return self.struct_hash(type_name, value)
 
         value = cast(int | str, value)
+        
         return int(parse_felt(value))
 
     def struct_hash(self, type_name: str, data: dict) -> int:
