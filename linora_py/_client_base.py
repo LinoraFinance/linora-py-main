@@ -40,6 +40,7 @@ class _ClientBase:
             ...     finally:
             ...         await linora.close()
             >>> asyncio.run(main())
+            
         """
         if hasattr(self, "ws_client") and self.ws_client:
             await self.ws_client.close()
