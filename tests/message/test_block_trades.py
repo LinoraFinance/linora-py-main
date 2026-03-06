@@ -37,6 +37,7 @@ def test_trade_class():
     assert trade.size == Decimal("0.1")
     assert trade.maker_order == maker_order
     assert trade.taker_order == taker_order
+    
 
     # Test chain formatting
     assert trade.chain_price() == "150050000000"  # 1500.50 * 10^8
