@@ -24,6 +24,7 @@ class TestBlockTradesApi:
         """Test list_block_trades with no filters."""
         with patch.object(self.api_client, "get") as mock_get:
             mock_get.return_value = {"results": []}
+            
 
             self.api_client.list_block_trades()
 
