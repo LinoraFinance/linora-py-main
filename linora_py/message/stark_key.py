@@ -8,6 +8,7 @@ def build_stark_key_message(chain_id: int) -> TypedDataDict:
         "message": {
             "action": "STARK Key",
         },
+        
         "domain": {"name": "linora", "chainId": chain_id, "version": "1"},
         "primaryType": "Constant",
         "types": {
