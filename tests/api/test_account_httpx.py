@@ -46,6 +46,7 @@ class TestAccountHttpxIntegration:
             config=self.config,
             l1_address=self.test_l1_address,
             l1_private_key=self.test_l1_private_key,
+            
         )
 
         # Mock httpx.AsyncClient response
