@@ -36,6 +36,7 @@ class TestWebSocketCompression:
 
         # Should have enable_compression=False
         assert ws_client.enable_compression is False
+        
 
     @pytest.mark.asyncio
     @patch("websockets.connect", new_callable=AsyncMock)
