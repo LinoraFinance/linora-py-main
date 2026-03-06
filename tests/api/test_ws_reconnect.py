@@ -37,6 +37,7 @@ class TestWebSocketError(Exception):
 
 class MockWebSocketConnection:
     """Mock WebSocket connection for testing."""
+    
 
     def __init__(self, messages=None, should_fail=False):
         self.messages = messages or []
