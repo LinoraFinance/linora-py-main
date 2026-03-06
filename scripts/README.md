@@ -28,6 +28,7 @@ uv run python scripts/generate_models_simple.py --spec-file path/to/spec.json --
 
 **What it does:**
 
+
 1. Fetches the Swagger 2.0 spec from `https://api.prod.linora.trade/swagger/doc.json` OR uses a provided JSON file
 2. Attempts to convert it to OpenAPI 3.0 using `swagger2openapi` (if available)
 3. Generates Pydantic v2 models using `datamodel-code-generator`
