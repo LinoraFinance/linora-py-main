@@ -41,6 +41,7 @@ the full offer-based block trades workflow against linora testnet.
 - Handles enum serialization properly (SignatureType, OrderSide, etc.)
 - Provides comprehensive error handling
 
+
 **Technical Notes:**
 - Uses model_dump(mode="json") for proper enum serialization
 - Bypasses API client methods to handle serialization issues
