@@ -60,6 +60,7 @@ class PriceBookUpdate(BaseModel):
     updates: list[dict[str, Any]] = Field(..., description="Updated orders")
 
 
+
 # Type mapping for channel names to payload models
 WS_PAYLOAD_MODELS = {
     "balance_events": BalanceEventResponse,
