@@ -36,6 +36,7 @@ class MockSigner:
         self.should_add_signature = should_add_signature
         self.signed_orders = []
         self.signed_batches = []
+        
 
     def sign_order(self, order_data):
         self.signed_orders.append(order_data.copy())
