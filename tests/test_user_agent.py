@@ -42,6 +42,7 @@ class TestUserAgent:
 
         platform_name = platform.system()
         assert platform_name in user_agent
+        
 
     def test_user_agent_fallback_dev_version(self):
         """Test that user agent falls back to 'dev' when package not installed."""
