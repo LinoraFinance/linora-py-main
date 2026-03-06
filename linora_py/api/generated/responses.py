@@ -33,6 +33,7 @@ class AccountKind(str, Enum):
     account_kind_subaccount = "subaccount"
     account_kind_vault_operator = "vault_operator"
     account_kind_vault_sub_operator = "vault_sub_operator"
+    
 
 
 class AccountMarginEntry(BaseModel):
