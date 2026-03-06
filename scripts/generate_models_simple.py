@@ -52,6 +52,7 @@ def main():
         print("📡 Fetching OpenAPI spec from linora API...")
         # Fetch the spec
         with httpx.Client() as client:
+            
             response = client.get(api_url)
             response.raise_for_status()
             swagger_spec = response.json()
