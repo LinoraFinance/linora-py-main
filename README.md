@@ -1,11 +1,5 @@
 # linora Python SDK
 
-[![Release](https://img.shields.io/github/v/release/tradelinora/linora-py)](https://img.shields.io/github/v/release/tradelinora/linora-py)
-[![Build status](https://img.shields.io/github/actions/workflow/status/tradelinora/linora-py/main.yml?branch=main)](https://github.com/tradelinora/linora-py/actions/workflows/main.yml?query=branch%3Amain)
-[![codecov](https://codecov.io/gh/tradelinora/linora-py/branch/main/graph/badge.svg)](https://codecov.io/gh/tradelinora/linora-py)
-[![Commit activity](https://img.shields.io/github/commit-activity/m/tradelinora/linora-py)](https://img.shields.io/github/commit-activity/m/tradelinora/linora-py)
-[![License](https://img.shields.io/github/license/tradelinora/linora-py)](https://img.shields.io/github/license/tradelinora/linora-py)
-
 linora Python SDK provides a simple interface to interact with the linora REST and WS API.
 
 ## Examples
