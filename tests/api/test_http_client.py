@@ -30,6 +30,7 @@ class TestHttpClient:
         mock_response.status_code = 200
         mock_response.json.return_value = {"status": "success"}
         mock_request.return_value = mock_response
+        
 
         result = self.http_client.request(
             url="https://api.example.com/test",
