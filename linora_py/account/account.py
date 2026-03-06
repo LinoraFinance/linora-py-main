@@ -5,6 +5,7 @@ import types
 from decimal import Decimal
 from enum import IntEnum
 
+
 from httpx import AsyncClient
 from starknet_py.common import int_from_bytes, int_from_hex
 from starknet_py.hash.address import compute_address
