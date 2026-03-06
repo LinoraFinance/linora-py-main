@@ -51,6 +51,7 @@ def build_block_trade_message(chain_id: int, block_trade: BlockTrade) -> TypedDa
                 "size": trade.maker_order.chain_size(),
                 "price": trade.maker_order.chain_price(),
             },
+            
             "taker_order": {
                 "timestamp": str(trade.taker_order.signature_timestamp),
                 "market": trade.taker_order.market,
