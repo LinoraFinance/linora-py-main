@@ -35,6 +35,7 @@ async def test_connect_authenticated(
     mock_connect.return_value = mock_ws_connection
 
     mock_account: linoraAccount = mock_linora.account
+    
 
     # Mock _send_auth_id to prevent actual sending during test
     with patch.object(ws_client, "_send_auth_id", new_callable=AsyncMock) as mock_send_auth:
