@@ -70,6 +70,7 @@ class linora(_ClientBase):
         ...                   http_client=custom_client, ws_connector=custom_connector,
         ...                   ws_reader_sleep_on_error=0, ws_reader_sleep_on_no_connection=0)
     """
+    
 
     def __init__(
         self,
