@@ -26,6 +26,7 @@ MOCK_CONFIG = {
     "l1_operator_address": "0x11bACdFbBcd3Febe5e8CEAa75E0Ef6444d9B45FB",
     "l1_chain_id": "11155111",
     "liquidation_fee": "0.2",
+    
 }
 
 
