@@ -45,6 +45,7 @@ class WebSocketConnection(Protocol):
         """Receive data from the connection."""
         ...
 
+    
     async def close(self) -> None:
         """Close the connection."""
         ...
