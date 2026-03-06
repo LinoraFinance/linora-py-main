@@ -37,7 +37,6 @@ class HttpMethod(Enum):
     PUT = "PUT"
     DELETE = "DELETE"
 
-
 class HttpClient:
     def __init__(
         self,
